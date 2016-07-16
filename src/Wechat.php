@@ -9,12 +9,45 @@ use yii\base\InvalidParamException;
 use yii\base\InvalidConfigException;
 
 
+
 class Wechat extends Component
 {
+
+
+    /**
+     * Access Token更新后事件
+     */
+    const EVENT_AFTER_ACCESS_TOKEN_UPDATE = 'afterAccessTokenUpdate';
+    /**
+     * JS API更新后事件
+     */
+    const EVENT_AFTER_JS_API_TICKET_UPDATE = 'afterJsApiTicketUpdate';
+    
+    const WECHAT_OAUTH2_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
+    const WECHAT_OAUTH2_ACCESS_TOKEN_PREFIX = '/sns/oauth2/access_token';
+    const WECHAT_OAUTH2_ACCESS_TOKEN_REFRESH_PREFIX = '/sns/oauth2/refresh_token';
+    const WEHCAT_SNS_USER_INFO_PREFIX = '/sns/userinfo';
+    const WECHAT_SNS_AUTH_PREFIX = '/sns/auth';
+    const API_TOKEN_GET = '/cgi-bin/token?';
+    const WECHAT_JS_API_TICKET_PREFIX = '/cgi-bin/ticket/getticket';
     /**
      * 微信接口基本地址
      */
     const WECHAT_BASE_URL = 'https://api.weixin.qq.com';
+  
+   
+    protected $grant_type = 'client_credential';
+    
+    protected $http;
+    
+    protected $queryName = 'access_token';
+
+    protected $_accessToken;
+
+    /**
+     * @var array
+     */
+    public $_jsApiTicket;
     /**
      * 数据缓存前缀
      * @var string
@@ -40,6 +73,11 @@ class Wechat extends Component
      * @var string
      */
     public $encodingAesKey;
+
+
+    use \wuwenhan\wechatsdk\src\core\AccessToken;
+    use \wuwenhan\wechatsdk\src\core\Authcode;
+    use \wuwenhan\wechatsdk\src\core\JsApiTicket;
 
     /**
      * @inheritdoc
@@ -76,5 +114,6 @@ class Wechat extends Component
         $tmpStr = implode($tmpArr);
         return sha1($tmpStr) == $signature;
     }
+
 
 }

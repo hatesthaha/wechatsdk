@@ -1,37 +1,16 @@
 <?php
 
-namespace wuwenhan\src\core;
+namespace wuwenhan\wechatsdk\src\core;
 
 use Yii;
 use Yii\base\Event;
 use Yii\web\HttpException;
+use wuwenhan\wechatsdk\src\core\Http;
 
 
-class AccessToken
+
+trait AccessToken
 {
-    const EVENT_AFTER_ACCESS_TOKEN_UPDATE = 'afterAccessTokenUpdate';
-
-    const API_TOKEN_GET = '/cgi-bin/token?';
-
-    protected $appId;
-    
-    protected $secret;
-   
-    protected $grant_type = 'client_credential';
-    
-    protected $http;
-    
-    protected $queryName = 'access_token';
-
-    protected $_accessToken;
-
-
-
-    public function __construct($appId, $secret)
-    {
-        $this->appId = $appId;
-        $this->secret = $secret;
-    }
 
     /**
      * 缓存微信数据
@@ -45,7 +24,15 @@ class AccessToken
         $duration === null && $duration = $this->cacheTime;
         return Yii::$app->cache->set($this->getCacheKey($name), $value, $duration);
     }
-
+    /**
+     * 获取缓存的键值
+     * @param $name
+     * @return string
+     */
+    protected function getCacheKey($name)
+    {
+        return implode('_', [$this->cachePrefix, $this->appId, $name]);
+    }
     /**
      * 获取微信缓存数据
      * @param $name
@@ -69,6 +56,7 @@ class AccessToken
     {
         if ($this->_accessToken === null || $this->_accessToken['expire'] < YII_BEGIN_TIME || $force) {
             $result = !$force && $this->_accessToken === null ? $this->getCache('access_token', false) : false;
+     
             if ($result === false) {
                 if (!($result = $this->requestAccessToken())) {
                     throw new HttpException(500, 'Fail to get access_token from wechat server.');
@@ -102,11 +90,13 @@ class AccessToken
      */
     protected function requestAccessToken()
     {
-        $result =(new Http())->httpGet(API_TOKEN_GET, [
+      
+        $result =(new Http())->httpGet(self::API_TOKEN_GET, [
             'appid' => $this->appId,
-            'secret' => $this->secret,
+            'secret' => $this->appSecret,
             'grant_type' => $this->grant_type
         ]);
+     
         if (isset($result['access_token'])) {
             $result['expire'] = $result['expires_in'] + (int)YII_BEGIN_TIME;
             return $result;

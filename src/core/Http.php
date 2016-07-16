@@ -1,6 +1,6 @@
 <?php
 
-namespace wuwenhan\src\core;
+namespace wuwenhan\wechatsdk\src\core;
 
 use Yii;
 use Yii\base\InvalidParamException;
@@ -37,7 +37,22 @@ class Http
     {
         return $this->parseHttpResult($url, $params, 'post');
     }
-
+    /**
+     * Api url 组装
+     * @param $url
+     * @param array $options
+     * @return string
+     */
+    public function httpBuildQuery($url, array $options)
+    {
+        if (stripos($url, 'http://') === false && stripos($url, 'https://') === false) {
+            $url = self::WECHAT_BASE_URL . $url;
+        }
+        if (!empty($options)) {
+            $url .= (stripos($url, '?') === null ? '&' : '?') . http_build_query($options);
+        }
+        return $url;
+    }
     /**
      * 解析api回调请求
      * 会根据返回结果处理响应的回调结果.如 40001 access_token失效(会强制更新access_token后)重发, 保证请求的的有效
@@ -52,8 +67,11 @@ class Http
         if (stripos($url, 'http://') === false && stripos($url, 'https://') === false) {
             $url = self::WECHAT_BASE_URL . $url;
         }
+
         $return = $this->http($url, $params, $method);
+         
         $return = json_decode($return, true) ? : $return;
+      
         if (isset($return['errcode']) && $return['errcode']) {
             $this->lastErrorInfo = $return;
             $log = [
